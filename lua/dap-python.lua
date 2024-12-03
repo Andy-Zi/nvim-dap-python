@@ -3,6 +3,7 @@
 local api = vim.api
 local M = {}
 local uv = vim.uv or vim.loop
+local global_opts = {}
 
 --- Test runner to use by default.
 --- The default value is dynamic and depends on `pytest.ini` or `manage.py` markers.
@@ -131,9 +132,9 @@ local enrich_config = function(config, on_config)
     ---@diagnostic disable-next-line: inject-field
     config.pythonPath = get_python_path()
   end
-  if not config.console then
+  if not config.console and global_opts.console then
     ---@diagnostic disable-next-line: inject-field
-    config.console = 'externalTerminal'
+    config.console = global_opts.console
   end
   on_config(config)
 end
@@ -218,7 +219,7 @@ end
 function M.setup(python_path, opts)
   local dap = load_dap()
   python_path = python_path and vim.fn.expand(vim.fn.trim(python_path), true) or 'python3'
-  opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
+  global_opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
       ---@diagnostic disable-next-line: undefined-field
@@ -271,7 +272,7 @@ function M.setup(python_path, opts)
   dap.listeners.before["event_debugpySockets"]["dap-python"] = function()
   end
 
-  if opts.include_configs then
+  if global_opts.include_configs then
     local configs = dap.configurations.python or {}
     dap.configurations.python = configs
     table.insert(configs, {
@@ -279,8 +280,8 @@ function M.setup(python_path, opts)
       request = 'launch';
       name = 'file';
       program = '${file}';
-      console = opts.console;
-      pythonPath = opts.pythonPath,
+      console = global_opts.console;
+      pythonPath = global_opts.pythonPath,
     })
     table.insert(configs, {
       type = 'python';
@@ -295,8 +296,8 @@ function M.setup(python_path, opts)
         end
         return vim.split(args_string, " +")
       end;
-      console = opts.console;
-      pythonPath = opts.pythonPath,
+      console = global_opts.console;
+      pythonPath = global_opts.pythonPath,
     })
     table.insert(configs, {
       type = 'python';
@@ -316,8 +317,8 @@ function M.setup(python_path, opts)
       module = 'doctest',
       args = { "${file}" },
       noDebug = true,
-      console = opts.console,
-      pythonPath = opts.pythonPath,
+      console = global_opts.console,
+      pythonPath = global_opts.pythonPath,
     })
   end
 end
