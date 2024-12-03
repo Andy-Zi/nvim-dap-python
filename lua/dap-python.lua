@@ -131,6 +131,10 @@ local enrich_config = function(config, on_config)
     ---@diagnostic disable-next-line: inject-field
     config.pythonPath = get_python_path()
   end
+  if not config.console then
+    ---@diagnostic disable-next-line: inject-field
+    config.console = 'externalTerminal'
+  end
   on_config(config)
 end
 
